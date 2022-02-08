@@ -19,6 +19,7 @@ We use the following categories for changes:
 
 ### Fixed
 - Fix spans with end < start. Start and end are swapped in this case. [#1096]
+- Fix broken `extraEnv` parameter in helm chart values [#1126]
 
 ## [0.9.0] - 2022-02-02
 
