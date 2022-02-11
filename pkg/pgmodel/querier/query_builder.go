@@ -242,7 +242,7 @@ func canAttemptPushdown(metadata *promqlMetadata) bool {
 	path := metadata.path // PromQL AST.
 	queryHints := metadata.queryHints
 	selectHints := metadata.selectHints
-	return extension.ExtensionIsInstalled && queryHints != nil && !hasSubquery(path) && selectHints != nil
+	return queryHints != nil && !hasSubquery(path) && selectHints != nil
 }
 
 // tryPushDown inspects the AST above the current node to determine if it's
