@@ -58,9 +58,13 @@ class Trace:
 
 
 def generate_tags() -> Dict[str, Any]:
-    tags = {}
-    # service.name is "required" per spec
-    tags['service.name'] = random.choice(string.ascii_lowercase + string.ascii_uppercase) * random.randint(1, 5)
+    tags = {
+        'service.name': random.choice(
+            string.ascii_lowercase + string.ascii_uppercase
+        )
+        * random.randint(1, 5)
+    }
+
     for _ in range(random.randint(3, 12)):
         which = random.choice(['fake', 'standard'])
         if which == 'fake':
@@ -77,13 +81,12 @@ def generate_tags() -> Dict[str, Any]:
                 v = (date(2021, 1, 1) + timedelta(days=random.randint(0, 365))).isoformat()
             else:
                 v = random.choice(string.ascii_lowercase + string.ascii_uppercase) * random.randint(1, 5)
-            tags[k] = v
         else:
             k = random.choice(std_tag_key_list)
             if k in tags:
                 continue
             v = random.choice(string.ascii_lowercase + string.ascii_uppercase) * random.randint(1, 5)
-            tags[k] = v
+        tags[k] = v
     return tags
 
 
@@ -145,7 +148,7 @@ def generate_span(trace: Trace, parent_span: Optional[Span], depth: int, child: 
     span.instrumentation_lib = generate_instrumentation_lib()
     span.resource = generate_resource()
     trace.spans.append(span)
-    depth = depth - 1
+    depth -= 1
     if depth > 0:
         siblings = random.randint(min_breadth, max_breadth)
         for child in range(siblings):
@@ -162,15 +165,12 @@ def generate_trace(min_depth: int, max_depth: int, min_breadth: int, max_breadth
 
 
 def save_tag_keys(tag_keys: List[Tuple[str, int]], cur) -> None:
-    to_save = []
-    for t in tag_keys:
-        if t[0] not in std_tag_key_set:  # don't bother saving standard tag keys, we know they are already there
-            to_save.append(t)
-    if len(to_save) == 0:
+    to_save = [t for t in tag_keys if t[0] not in std_tag_key_set]
+    if not to_save:
         return
     to_save.sort(key=lambda tup: tup[0])  # insert in sorted order to prevent deadlocks
     for tup in to_save:
-        cur.execute(f"select ps_trace.put_tag_key(%s, %s::ps_trace.tag_type)", tup)
+        cur.execute('select ps_trace.put_tag_key(%s, %s::ps_trace.tag_type)', tup)
 
 
 def save_tags(tags: List[Tuple[str, Any, int]], cur) -> None:
@@ -299,7 +299,7 @@ def load_standard_tags(cur) -> None:
     global std_tag_key_set, std_tag_key_list
     cur.execute('select key from _ps_trace.tag_key where id <= 174')
     std_tag_key_list = [r[0] for r in cur]
-    std_tag_key_set = {k for k in std_tag_key_list}
+    std_tag_key_set = set(std_tag_key_list)
 
 
 def main() -> None:
